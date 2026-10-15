@@ -11,7 +11,7 @@ python3 -m http.server 8000 --bind 0.0.0.0
 Pruebas numéricas:
 
 ```sh
-node --test tests/beam.test.mjs
+node --test tests/*.test.mjs
 ```
 
 Introduce L, Δx y ΔL en metros y P en kN. La primera carga comienza en x = 0; las demás tienen x inicial negativo. Selecciona posiciones o separaciones positivas entre cargas consecutivas. Todo el tren se desplaza hacia la derecha hasta que la última carga alcanza L; se incluye después el estado descargado. Las cargas fuera de [0,L] no contribuyen.
@@ -43,10 +43,10 @@ Los valores son correctos para las posiciones muestreadas y los dos lados del sa
 
 ## Publicar en internet
 
-La aplicación es estática: no necesita servidor de cálculo, base de datos, claves ni compilación. Publica `index.html`, `style.css`, `app.mjs` y `beam.mjs` juntos en la raíz del sitio. Puedes incluir también la documentación y las pruebas.
+La aplicación es estática: no necesita servidor de cálculo, base de datos, claves ni compilación. Publica `index.html`, `style.css`, `app.mjs`, `beam.mjs`, `loads-csv.mjs` y la carpeta `ejemplos` juntos en la raíz del sitio. Puedes incluir también la documentación y las pruebas.
 
 - **GitHub Pages:** guarda y sube los archivos a `DannyBarco/Puentes`. En Settings → Pages selecciona Deploy from a branch, la rama `main` y la carpeta `/ (root)`. Guarda y espera al despliegue. GitHub mostrará la dirección publicada (normalmente `https://dannybarco.github.io/Puentes/`). La disponibilidad depende del plan y visibilidad del repositorio. Subir los archivos al repositorio no activa GitHub Pages; debes habilitarlo en Settings → Pages.
-- **Netlify:** en la opción de despliegue manual, arrastra una carpeta que tenga los cuatro archivos en su raíz. No hay comando de build. Netlify asigna una dirección HTTPS.
+- **Netlify:** en la opción de despliegue manual, arrastra una carpeta que tenga los archivos de la aplicación en su raíz. No hay comando de build. Netlify asigna una dirección HTTPS.
 - **Cloudflare Pages o Vercel:** crea un proyecto estático desde el repositorio; no se necesitan instalación ni build, y la salida es la carpeta raíz. También puedes usar cualquier alojamiento que sirva módulos `.mjs` con tipo MIME JavaScript.
 
 Publicar el entorno de Codex conserva su configuración y archivos; es una acción distinta de publicar este sitio web en internet.
@@ -61,3 +61,21 @@ PLAYWRIGHT_MODULE=/tmp/puentes-browser/node_modules/playwright/index.mjs BROWSER
 ```
 
 Ajusta `BROWSER_EXECUTABLE` al ejecutable de Chromium/Chrome instalado. Puedes definir `TEST_URL` para otro servidor y `TEST_ARTIFACTS` para guardar capturas y CSV en otra carpeta. Las rutas del ejemplo corresponden al entorno Linux de desarrollo.
+
+
+## Importar cargas desde un archivo CSV
+
+Usa **Importar cargas desde CSV** y selecciona un archivo. La importación reemplaza la tabla completa; las cargas importadas siguen siendo editables. Después pulsa **Calcular respuestas**. L, Δx y ΔL se introducen en la interfaz.
+
+Descarga la plantilla desde la aplicación o usa `ejemplos/cargas.csv`:
+
+```csv
+P_kN,distancia_m
+10,0
+15,2
+10,2
+```
+
+Cada fila es una carga, en orden desde la primera hacia las que vienen detrás. `P_kN` es la magnitud en kN (positiva hacia abajo); `distancia_m` es la separación en metros respecto a la carga anterior. La primera separación debe ser 0. En el ejemplo se generan posiciones iniciales 0, −2 y −4 m, conservando las separaciones durante todo el recorrido. Una separación 0 permite cargas coincidentes.
+
+Guarda el archivo como CSV UTF-8. Se admiten comas como separadores con punto decimal, o punto y coma como separador con punto o coma decimal (compatible con exportaciones de Excel). No uses separadores de miles. La cabecera es obligatoria y se requieren exactamente dos columnas. Se admiten hasta 500 cargas y archivos de hasta 1 MB. Si hay un error, se indica la causa y se conservan la tabla y los resultados anteriores. Los archivos se leen en el navegador, sin enviarse a un servidor.

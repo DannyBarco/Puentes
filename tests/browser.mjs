@@ -70,6 +70,28 @@ try{
   const expected=analyze(model).envelope;
   assert.equal(csv.length,expected.length+1);
   csv.slice(1).forEach((line,i)=>line.split(',').forEach((v,j)=>assert.equal(Number(v),expected[i][['a','vmin','vmax','mmin','mmax'][j]])));
+  // Import a real file, calculate, and verify that invalid input is atomic.
+  await page.reload();await page.waitForSelector('#output tr');
+  await page.locator('#importLoads').setInputFiles({name:'cargas.csv',mimeType:'text/csv',buffer:Buffer.from('P_kN,distancia_m\n20,0\n12,3\n8,1.5\n')});
+  await page.waitForFunction(()=>document.getElementById('importStatus').textContent.includes('3 cargas importadas'));
+  assert.equal(await field(1,'x').inputValue(),'-3');
+  assert.equal(await field(2,'x').inputValue(),'-4.5');
+  assert.equal(await page.locator('#csv').isDisabled(),true);
+  await calculate();
+  await checkTable({L:10,dx:.1,da:.5,loads:[{p:20,x:0},{p:12,x:-3},{p:8,x:-4.5}]});
+  const retained=await table();
+  await page.locator('#importLoads').setInputFiles({name:'error.csv',mimeType:'text/csv',buffer:Buffer.from('P_kN,distancia_m\n20,0\n12,-3')});
+  await page.waitForFunction(()=>document.getElementById('importStatus').textContent.includes('No se importó'));
+  assert.deepEqual(await table(),retained);
+  assert.equal(await field(1,'x').inputValue(),'-3');
+  await edit(field(1,'gap'),2);await calculate();
+  assert.equal(await field(2,'x').inputValue(),'-3.5');
+  const templatePromise=page.waitForEvent('download');
+  await page.getByRole('link',{name:'Descargar plantilla CSV'}).click();
+  const template=await templatePromise;
+  assert.equal(template.suggestedFilename(),'cargas.csv');
+  await template.saveAs(`${out}/cargas.csv`);
+  assert.match(await readFile(`${out}/cargas.csv`,'utf8'),/P_kN,distancia_m/);
   // Document the default model in both layouts.
   await page.reload();await page.waitForSelector('#output tr');
   await page.screenshot({path:`${out}/desktop.png`,fullPage:true});
@@ -79,6 +101,6 @@ try{
   await page.setViewportSize({width:320,height:700});
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
   assert.deepEqual(errors,[]);
-  console.log('PASS Chromium: edición P/x/separaciones; recuperación de errores; añadir/eliminar; L/Δx/ΔL; 4 gráficas; tabla numérica; sección; descarga CSV íntegra; estado descargado; escritorio y móvil sin desbordamiento.');
+  console.log('PASS Chromium: edición P/x/separaciones; recuperación de errores; añadir/eliminar; L/Δx/ΔL; 4 gráficas; tabla numérica; sección; importación CSV y rechazo sin pérdida de datos; plantilla descargable; descarga CSV íntegra; estado descargado; escritorio y móvil sin desbordamiento.');
   console.log(`Capturas y CSV: ${out}`);
 }finally{await browser.close();}

@@ -13,3 +13,7 @@ Se corrigieron la propagación de separaciones inválidas, gráficas obsoletas a
 Los extremos son muestreados. Ejemplo: P = 10 kN, L = 10 m, a = 5 m. Con Δx = 3 m: V mín = −3 kN, V máx = 4 kN, M máx = 20 kN·m. Con Δx = 0.5 m: V mín = −5 kN, V máx = 5 kN, M máx = 25 kN·m. Los extremos continuos pueden quedar entre muestras.
 
 Para repetir: `node --test tests/beam.test.mjs` y la prueba de navegador descrita en USO.md.
+
+## Ampliación: entrada CSV
+
+Se añadieron 5 pruebas de lectura CSV (16 pruebas unitarias en total). Incluyen posiciones acumuladas, equivalencia de envolventes con entrada manual, CSV de Excel, validación de números/cabeceras/separaciones y límites de tamaño. La prueba de Chromium verifica importar, recalcular, editar las cargas importadas, rechazar un archivo incorrecto conservando datos y descargar la plantilla.

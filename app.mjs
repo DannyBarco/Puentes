@@ -1,4 +1,5 @@
 import {analyze,response} from './beam.mjs';
+import {parseLoadsCsv} from './loads-csv.mjs';
 const $=id=>document.getElementById(id);
 const fmt=n=>Math.abs(n)<1e-9?'0.000':n.toFixed(3);
 let loads=[{p:10,x:0},{p:15,x:-2},{p:10,x:-4}],result,model;
@@ -49,6 +50,22 @@ $('loads').addEventListener('click',e=>{
 $('add').onclick=()=>{loads.push({p:10,x:loads.length?loads.at(-1).x-2:0});renderLoads();invalidate();};
 $('mode').onchange=renderLoads;
 for(const id of ['length','dx','da']) $(id).oninput=invalidate;
+
+$('importLoads').addEventListener('change',async e=>{
+  const file=e.target.files[0];
+  if(!file) return;
+  $('importStatus').textContent='Leyendo archivo…';
+  try{
+    if(file.size>1000000) throw Error('El CSV supera el límite de 1 MB.');
+    const imported=parseLoadsCsv(await file.text());
+    loads=imported;
+    $('mode').value='gap';
+    renderLoads();invalidate();
+    $('importStatus').textContent=`${file.name}: ${loads.length} cargas importadas. Se reemplazó la tabla. Pulsa Calcular respuestas.`;
+  }catch(error){
+    $('importStatus').textContent=`No se importó el archivo: ${error.message} Se conservaron los datos anteriores.`;
+  }finally{e.target.value='';}
+});
 
 function chart(target,series,xs,label){
   const width=Math.max(280,$(target).clientWidth),left=65,right=20;
